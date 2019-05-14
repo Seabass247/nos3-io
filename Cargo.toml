@@ -1,0 +1,12 @@
+[package]
+name = "nos3_io"
+version = "0.1.0"
+authors = ["nos3"]
+edition = "2018"
+
+[dependencies]
+serial = "0.4.0"
+failure = "0.1.2"
+nosengine-rust = { path = "./nosengine-rust" }
+display_derive = "0.0.0"
+toml = "0.5.0"

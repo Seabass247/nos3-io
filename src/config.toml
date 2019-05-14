@@ -1,0 +1,7 @@
+# Add the USB to Serial device to Vbox USB filters, serial_port should be "/dev/ttyUSB*"
+[uart]
+serial_port = "/dev/ttyUSB0"
+
+# For future I2C support
+[i2c]
+adapter_device = "/dev/ttyS1"
