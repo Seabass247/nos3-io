@@ -143,11 +143,9 @@ fn uart_init(uart_serial_port: String, rx: mpsc::Receiver<()>) {
         };
         port.configure(&settings).unwrap();
 
-        uart.set_callback(move |data: &[u8]| {
-            println!("[ DEBUG ] UART data out");
-            port.write_all(data);
-        });
-
+        // Thread control loop, stops when you send `()` to its `rx` channel end point
+        let mut in_buf: Vec<u8> = vec![0; 512];
+        let mut in_data: Vec<u8> = Vec::new();
         loop {
             match rx.try_recv() {
                     Ok(_) | Err(mpsc::TryRecvError::Disconnected) => {
@@ -155,15 +153,28 @@ fn uart_init(uart_serial_port: String, rx: mpsc::Receiver<()>) {
                         break;
                     },
                     Err(mpsc::TryRecvError::Empty) => {
-                        //let mut buf = Vec::new();
-                        //let mut in_port = serial::open(uart_serial_port.as_str()).unwrap();
-                        //match in_port.read(buf.as_mut_slice()) {
-                        //    Ok(n) => {
-                                //uart.write(buf.as_slice());
-                        //        println!("[ DEBUG ] UART data in");
-                        //    }
-                        //    Err(err) => {}                            
-                        //}
+                        // Forward incoming UART data in to NOS UART
+                        match port.read(in_buf.as_mut_slice()) {
+                            Ok(n) if {n > 0} => {
+                                in_data.append(in_buf[0..n].to_vec().as_mut());
+                            }
+                            _ if {in_data.len() > 0} => {
+                                uart.write(&in_data);
+                                println!("[ DEBUG ] UART data in {:?}", &in_data);
+                                in_data.clear();
+                            }
+                            _ => {}
+                        };
+                        // Forward NOS UART data out to UART
+                        let data = uart.read(512);
+                        match &data.len() {
+                            0 => {},
+                            _ => {
+                                let out = data.as_slice();
+                                println!("[ DEBUG ] UART data out [{}...{}]", &out[0], &out[data.len() as usize - 1]);
+                                port.write_all(out);
+                            },
+                        }
                     }
             }
         }
