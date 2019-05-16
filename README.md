@@ -1,6 +1,6 @@
 # nos3-io
-[WIP] UART works, planned support for I2c
+[WIP] UART works, and i2c implementation is untested
 
-do `cargo run`
+to run: type `cargo run` in root of project
 
 see config in `src/config.toml`
